@@ -2,7 +2,7 @@
   <!-- Partner Logo Section Begin -->
     <div class="partner-logo center">
         <div class="container">
-            <carousel class="logo-carousel" :loop="true" :items="5" :dots="false" nav="false">
+            <carousel class="logo-carousel" :loop="true" :items="5" :dots="false" :nav="false">
                 <div class="logo-item">
                     <div class="tablecell-inner">
                         <img src="img/logo-carousel/logo-1.png" alt="" />

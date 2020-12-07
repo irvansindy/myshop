@@ -25,24 +25,16 @@
             <div class="row">
               <div class="col-lg-6">
                 <div class="product-pic-zoom">
-                  <img class="product-big-img" :src="img_default" alt="" />
+                  <img class="product-big-img" :src="gambar_default" alt="" />
                 </div>
-                <div class="product-thumbs">
+                <div class="product-thumbs" v-if="productDetails.galleries.length > 0">
                   <carousel class="product-thumbs-track ps-slider" :dots="false" :nav="false">
-                    <div class="pt" @click="changeImage(img_thumbs[0])" :class="img_thumbs[0] == img_default ? 'active' : ''">
-                      <img src="img/products/women-1.jpg" alt="" />
-                    </div>
-
-                    <div class="pt" @click="changeImage(img_thumbs[1])" :class="img_thumbs[1] == img_default ? 'active' : ''">
-                      <img src="img/products/women-2.jpg" alt="" />
-                    </div>
-
-                    <div class="pt" @click="changeImage(img_thumbs[2])" :class="img_thumbs[2] == img_default ? 'active' : ''">
-                      <img src="img/products/women-3.jpg" alt="" />
-                    </div>
-
-                    <div class="pt" @click="changeImage(img_thumbs[3])" :class="img_thumbs[3] == img_default ? 'active' : ''">
-                      <img src="img/products/women-4.jpg" alt="" />
+                    <div v-for="photo in productDetails.galleries" v-bind:key="photo.id"
+                      class="pt"
+                      @click="changeImage(photo.photo)"
+                      :class="photo.photo == gambar_default ? 'active' : ''"
+                    >
+                      <img :src="photo.photo" alt="">
                     </div>
                   </carousel>
                 </div>
@@ -50,25 +42,17 @@
               <div class="col-lg-6">
                 <div class="product-details text-left">
                   <div class="pd-title">
-                    <span>oranges</span>
-                    <h3>Pure Pineapple</h3>
+                    <span>{{productDetails.type}}</span>
+                    <h3>{{productDetails.name}}</h3>
                   </div>
                   <div class="pd-desc">
-                    <p>
-                      Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis, error officia. Rem aperiam laborum voluptatum vel, pariatur modi hic provident eum iure natus quos non a sequi, id accusantium! Autem.
-                    </p>
-                    <p>
-                      Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quam possimus quisquam animi, commodi, nihil voluptate nostrum neque architecto illo officiis doloremque et corrupti cupiditate voluptatibus error illum. Commodi expedita animi nulla aspernatur.
-                      Id asperiores blanditiis, omnis repudiandae iste inventore cum, quam sint molestiae accusamus voluptates ex tempora illum sit perspiciatis. Nostrum dolor tenetur amet, illo natus magni veniam quia sit nihil dolores.
-                      Commodi ratione distinctio harum voluptatum velit facilis voluptas animi non laudantium, id dolorem atque perferendis enim ducimus? A exercitationem recusandae aliquam quod. Itaque inventore obcaecati, unde quam
-                      impedit praesentium veritatis quis beatae ea atque perferendis voluptates velit architecto?
-                    </p>
-                    <h4>$495.00</h4>
+                    <p v-html="productDetails.description"></p>
+                    <h4>Rp. {{productDetails.price}}</h4>
                   </div>
                   <div class="quantity">
-                    <!-- <a href="shopping-cart.html" class="">Add To Cart</a>
-                    <a href="./home.html"><i class="fa fa-home"></i> Home</a> -->
-                    <router-link to="/cart" class="primary-btn pd-cart"> Add To Cart</router-link>
+                    <router-link to="/cart">
+                      <a @click="saveKeranjang(productDetails.id, productDetails.name, productDetails.price, productDetails.galleries[0].photo)" href="#" class="primary-btn pd-cart">Add To Cart</a>
+                    </router-link>
                   </div>
                 </div>
               </div>
@@ -91,6 +75,7 @@ import Footer from '@/components/Footer.vue';
 import RelatedProduct from '@/components/RelatedProduct.vue';
 
 import carousel from 'vue-owl-carousel';
+import axios from "axios";
 
 export default {
   name: "product",
@@ -102,19 +87,50 @@ export default {
   },
   data() {
     return {
-        img_default : "img/products/women-1.jpg",
-        img_thumbs : [
-          "img/products/women-1.jpg",
-          "img/products/women-2.jpg",
-          "img/products/women-3.jpg",
-          "img/products/women-4.jpg"
-        ]
+        gambar_default : '',
+        productDetails: [],
+        keranjangUser: []
       }
   },
   methods: {
     changeImage(urlImage) {
-      this.img_default = urlImage;
+      this.gambar_default = urlImage;
+    },
+    setDataPicture(data) {
+      // replace object productDetail menggunakan API
+      this.productDetails = data;
+      // replace value gambar default menggunakan API
+      this.gambar_default = data.galleries[0].photo;
+    },
+    saveKeranjang(idProduct, nameProduct, priceProduct, photoProduct) {
+      var productStored = {
+        "id": idProduct,
+        "name": nameProduct,
+        "price": priceProduct,
+        "photo": photoProduct,
+      }
+      this.keranjangUser.push(productStored);
+      const parsed = JSON.stringify(this.keranjangUser);
+      localStorage.setItem('keranjangUser', parsed);
     }
+  },
+  mounted() {
+    if (localStorage.getItem('keranjangUser')) {
+      try {
+        this.keranjangUser = JSON.parse(localStorage.getItem('keranjangUser'));
+      } catch(e) {
+        localStorage.removeItem('keranjangUser');
+      }
+    }
+    axios
+      .get("http://127.0.0.1:8000/api/products",{
+        params: {
+          id: this.$route.params.id
+        }
+      })
+      .then(res => (this.setDataPicture(res.data.data)))
+      //eslint-disable-next-line no-console
+      .catch(err => console.log(err));
   }
 }
 </script>
